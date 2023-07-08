@@ -4,39 +4,62 @@ function novoElemento(tagName, className) {
     return elemento
 }
 
-function NovoCarro(largura, posicaoNaTela) {
-    this.elemento = novoElemento('img', 'par-de-barreiras');
-    this.elemento.src = 'luigi-removebg-preview.png';
-
-    this.getX = () => parseInt(this.elemento.style.top.split('px')[0])
-    this.setX =  posicaoNaTela => this.elemento.style.top = `${posicaoNaTela}px`
-    this.getAltura = () => this.elemento.clientHeight
-
-    this.setX(posicaoNaTela)
+function criaPista(quantidadePistas) {
+    this.elemento = novoElemento('img', 'barreiras')
+    this.elemento.src = '/personagens/pista.png'
 }
 
-function Corredores(largura, altura, espaco) {
-    this.jogadores = [
-        new NovoCarro(largura, espaco*0),
-        new NovoCarro(largura, espaco*-1),
-        new NovoCarro(largura, espaco*-2),
-        new NovoCarro(largura, espaco*-3),
-    ]
+function NovoCarro(largura, altura) {
+    this.elemento = novoElemento('img', 'par-de-barreiras')
+    this.elemento.src = '/personagens/luigi.png'
 
-    const deslocamento = 3
+    this.getX = () => parseInt(this.elemento.style.left.split('px')[0])
+    this.setX = (posicaoNaTela) => this.elemento.style.left = `${posicaoNaTela}px`
+    this.getY = () => parseInt(this.elemento.style.top.split('px')[0])
+    this.setY = (posicaoNaTela) => this.elemento.style.top = `${posicaoNaTela}px`
+    this.getAltura = () => this.elemento.clientHeight
+
+    var posicaoXAleatoria = Math.floor(Math.random() * (400 - this.getAltura()))
+    var posicaoYAleatoria = Math.floor(Math.random() * (altura - this.getAltura()))
+
+    var margemX = (800 - this.getAltura()) / 2 // Margem horizontal para centralizar
+    var margemY = (altura - this.getAltura()) / 2 // Margem vertical para centralizar
+
+    this.setX(posicaoXAleatoria + margemX)
+    this.setY(posicaoYAleatoria + margemY)
+}
+
+function Corredores(largura, altura, quantidadeJogadores) {
+    this.jogadores = []
+
+    var quantidadeMaximaJogadores = Math.min(quantidadeJogadores, 3) // Limita a quantidade de jogadores em até 3
+
+    for (var i = 0; i < quantidadeMaximaJogadores; i++) {
+        var jogador = new NovoCarro(largura, altura);
+        this.jogadores.push(jogador)
+    }
+
+    const deslocamento = 3;
     this.animar = () => {
         this.jogadores.forEach(jogador => {
-            jogador.setX(jogador.getX() + deslocamento)
-        })
-    }
+            var yAtual = jogador.getY()
+            var novaPosicao = yAtual + deslocamento
+
+            if (novaPosicao > altura) {
+                jogador.setY(-jogador.getAltura())
+            } else {
+                jogador.setY(novaPosicao)
+            }
+        });
+    };
 }
 
 function Car(larguraJogo) {
-    let movingLeft = false;
-    let movingRight = false;
+    let movingLeft = false
+    let movingRight = false
 
     this.elemento = novoElemento('img', 'car')
-    this.elemento.src = 'mario-removebg-preview.png'
+    this.elemento.src = '/personagens/mario.png'
 
     this.getX = () => parseInt(this.elemento.style.left.split('px')[0])
     this.setX = y => this.elemento.style.left = `${y}px`
@@ -87,8 +110,12 @@ function Game() {
 
     const car = new Car(largura)
 
+    const pista = new criaPista()
+
     // areaDoJogo.appendChild(progresso.elemento)
     areaDoJogo.appendChild(car.elemento)
+    areaDoJogo.appendChild(pista.elemento)
+
     corredores.jogadores.forEach(jogador => areaDoJogo.appendChild(jogador.elemento))
 
     // this.start = () => {
@@ -108,6 +135,15 @@ function Game() {
             car.animar()
         }, 20)
     }
+}
+
+function Progresso() {
+
+    this.elemento = novoElemento('span', 'progresso')
+    this.atualizarPontos = pontos => {
+        this.elemento.innerHTML = pontos
+    }
+    this.atualizarPontos(0)
 }
 
 new Game().start()
