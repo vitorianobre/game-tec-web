@@ -48,6 +48,12 @@ function Corredores(largura, altura, espaco, notificarPonto) {
                 jogador.setY(jogador.getY() + espaco * this.jogadores.length)
                 jogador.sortearPosicao()
             }
+            const meio = 60 / 2
+            const cruzouMeio = jogador.getY() + deslocamento >= meio
+                && jogador.getY() < meio
+            if(cruzouMeio){
+                notificarPonto()
+            }
         })
     }
 }
@@ -73,9 +79,9 @@ function Car(larguraJogo) {
     }
 
     window.onkeydown = e => {
-        if (e.which == '37') {
+        if (e.which == '37' || e.which == '65') {
             movingLeft = true;
-        } else if (e.which == '39') {
+        } else if (e.which == '39' || e.which == '68') {
             movingRight = true;
         }
     }
@@ -149,6 +155,8 @@ function Game() {
     const progresso = new Progresso()
     const corredores = new Corredores(largura, altura, 300, () => progresso.atualizarPontos(++pontos))
 
+    const diminuiPonto = () => progresso.atualizarPontos(pontos - 1)
+
     const car = new Car(largura)
 
     const pista = new criaPista()
@@ -165,8 +173,8 @@ function Game() {
             car.animar()
 
             if(colidiu(car, corredores)){
-                clearInterval(temporizador)
-            } 
+                diminuiPonto()
+            }
         }, 10)
     }
 }
