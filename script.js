@@ -4,6 +4,11 @@ function novoElemento(tagName, className) {
     return elemento
 }
 
+function criaArbustos() {
+    this.elemento = novoElemento('img', 'arbustos')
+    this.elemento.src = './personagens/arvore-removebg-preview.png'
+}
+
 function criaPista() {
     this.elemento = novoElemento('img', 'pista')
     this.elemento.src = '/personagens/pista.png'
@@ -135,7 +140,6 @@ function colidiu(carroMario, corredores) {
         }
     })
     return colidiu
-
 }
 
 function Progresso() {
@@ -155,8 +159,6 @@ function Game() {
     const progresso = new Progresso()
     const corredores = new Corredores(largura, altura, 300, () => progresso.atualizarPontos(++pontos))
 
-    const diminuiPonto = () => progresso.atualizarPontos(pontos - 1)
-
     const car = new Car(largura)
 
     const pista = new criaPista()
@@ -173,7 +175,7 @@ function Game() {
             car.animar()
 
             if(colidiu(car, corredores)){
-                diminuiPonto()
+                progresso.atualizarPontos(--pontos)
             }
         }, 10)
     }

@@ -22,11 +22,11 @@ h1 {
 
 [game] {
     position: relative;
-    border: 5px solid dodgerblue;
     height: 600px;
     width: 1300px;
     margin: 15px;
-    background-color: deepskyblue;
+    /* background: url(./personagens/bg.jpg); */
+    background: green;
     overflow: hidden;
 }
 
@@ -54,4 +54,8 @@ h1 {
     /* height: 600px; */
     width: 400px;
     z-index: 1;
+}
+
+.arbustos {
+    width: 70px;
 }
