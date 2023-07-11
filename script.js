@@ -4,9 +4,27 @@ function novoElemento(tagName, className) {
     return elemento
 }
 
-function criaArbustos() {
+function criaArbustos(largura, altura, popsicaoNaTela) {
     this.elemento = novoElemento('img', 'arbustos')
-    this.elemento.src = './personagens/arvore-removebg-preview.png'
+    this.elemento.src = '/personagens/arvore-removebg-preview.png'
+
+    this.sortearPosicao = () => {
+        let posicaoXAleatoria = Math.floor(Math.random() * 350)
+        let posicaoYAleatoria = Math.floor(Math.random() * altura)
+        let margemX = (largura/2)+200 // Margem horizontal para centralizar
+        let margemY = (altura - this.getAltura()) / 2 // Margem vertical para centralizar
+        this.setX(posicaoXAleatoria + margemX)
+        this.setY(posicaoYAleatoria + margemY)
+    }
+
+    this.getX = () => parseInt(this.elemento.style.left.split('px')[0])
+    this.setX = (posicaoNaTela) => this.elemento.style.left = `${posicaoNaTela}px`
+    this.getY = () => parseInt(this.elemento.style.bottom.split('px')[0])
+    this.setY = (posicaoNaTela) => this.elemento.style.bottom = `${posicaoNaTela}px`
+    this.getAltura = () => this.elemento.clientHeight
+
+    this.sortearPosicao()
+    this.setY(popsicaoNaTela)
 }
 
 function criaPista() {
@@ -58,6 +76,26 @@ function Corredores(largura, altura, espaco, notificarPonto) {
                 && jogador.getY() < meio
             if(cruzouMeio){
                 notificarPonto()
+            }
+        })
+    }
+}
+
+function Arbustos (largura, altura, espaco){
+    this.arbustos = [
+        new criaArbustos(largura, altura, altura),
+        new criaArbustos(largura, altura, altura),
+        new criaArbustos(largura, altura, altura)
+    ]
+
+    const deslocamento = 3
+    this.animar = () =>{
+        this.arbustos.forEach(arbusto =>{
+            arbusto.setY(arbusto.getY() - deslocamento)
+
+            if(arbusto.getY() < -arbusto.getAltura()){
+                arbusto.setY(arbusto.getY() + espaco * this.arbustos.length)
+                arbusto.sortearPosicao()
             }
         })
     }
@@ -159,6 +197,8 @@ function Game() {
     const progresso = new Progresso()
     const corredores = new Corredores(largura, altura, 300, () => progresso.atualizarPontos(++pontos))
 
+    const arbustos = new Arbustos(largura, altura, 300)
+
     const car = new Car(largura)
 
     const pista = new criaPista()
@@ -168,11 +208,13 @@ function Game() {
     areaDoJogo.appendChild(pista.elemento)
 
     corredores.jogadores.forEach(jogador => areaDoJogo.appendChild(jogador.elemento))
+    arbustos.arbustos.forEach(arbusto => areaDoJogo.appendChild(arbusto.elemento))
 
     this.start = () => {
         const temporizador = setInterval(() => {
             corredores.animar()
             car.animar()
+            arbustos.animar()
 
             if(colidiu(car, corredores)){
                 progresso.atualizarPontos(--pontos)
