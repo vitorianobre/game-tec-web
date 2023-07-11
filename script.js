@@ -45,7 +45,7 @@ function ArbustosEsquerda (largura, altura, espaco){
     }
 }
 
-function criaArbustosDireita(largura, altura, popsicaoNaTela) {
+function criaArbustosDireita(largura, altura, posicaoNaTela) {
     this.elemento = novoElemento('img', 'arbustos')
     this.elemento.src = '/personagens/arvore-removebg-preview.png'
 
@@ -63,7 +63,7 @@ function criaArbustosDireita(largura, altura, popsicaoNaTela) {
     this.getAltura = () => this.elemento.clientHeight
 
     this.sortearPosicao()
-    this.setY(popsicaoNaTela)
+    this.setY(posicaoNaTela)
 }
 
 function ArbustosDireita (largura, altura, espaco){
@@ -286,9 +286,17 @@ function MostraEnergia() {
     }
 }
 
+function FimDeJogo(pontos, contadorEnergia, areaDoJogo) {
+    this.elemento = novoElemento('div', 'modal')
+    this.elemento.innerHTML = `<p>Sua pontuação: ${pontos}</p>
+    <p>Você abasteceu ${contadorEnergia} vezes </p>`
+    areaDoJogo.appendChild(this.elemento)
+}
+
 function Game() {
     let pontos = 0;
     let energia = 16;
+    let contadorEnergia = 0;
     const areaDoJogo = document.querySelector('[game]');
     const altura = areaDoJogo.clientHeight;
     const largura = areaDoJogo.clientWidth;
@@ -349,6 +357,7 @@ function Game() {
             colidiuComCogumelo2 = colidiuCombustivel(car, combustivelCogumelo2);
 
             if (colidiuComCogumelo) {
+                contadorEnergia++;
                 if (energia < 16) {
                     ++energia
                 }
@@ -357,6 +366,7 @@ function Game() {
             }
 
             if (colidiuComCogumelo2) {
+                contadorEnergia++;
                 if (energia < 16) {
                     ++energia
                 }
@@ -371,6 +381,7 @@ function Game() {
             mostraEnergia.atualizarEnergia(energia)
             if (energia == 0) {
                 clearInterval(temporizador)
+                FimDeJogo(pontos, contadorEnergia, areaDoJogo)
             }
         }, 1000)
     };
