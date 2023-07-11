@@ -114,30 +114,32 @@ function NovoCarro(largura, altura, popsicaoNaTela) {
     this.setY(popsicaoNaTela)
 } 
 
-function Corredores(largura, altura, espaco, notificarPonto) {
+function Corredores(largura, altura, espaco) {
     this.jogadores = [
         new NovoCarro(largura, altura, altura),
         new NovoCarro(largura, altura, altura),
         new NovoCarro(largura, altura, altura)
-    ]
+    ];
 
-    const deslocamento = 2
+    const deslocamento = 2;
     this.animar = () => {
+        let carrosInimigosSairam = 0;
+
         this.jogadores.forEach(jogador => {
-            jogador.setY(jogador.getY() - deslocamento)
+            jogador.setY(jogador.getY() - deslocamento);
 
             if (jogador.getY() < -jogador.getAltura()) {
-                jogador.setY(jogador.getY() + espaco * this.jogadores.length)
-                jogador.sortearPosicao()
+                if (!jogador.colidiu) {
+                    carrosInimigosSairam++;
+                }
+                jogador.setY(jogador.getY() + espaco * this.jogadores.length);
+                jogador.sortearPosicao();
+                jogador.colidiu = false;
             }
-            const meio = 60 / 2
-            const cruzouMeio = jogador.getY() + deslocamento >= meio
-                && jogador.getY() < meio
-            if(cruzouMeio){
-                notificarPonto()
-            }
-        })
-    }
+        });
+
+        return carrosInimigosSairam;
+    };
 }
 
 function Car(larguraJogo) {
@@ -209,14 +211,18 @@ function estaoSobrepostos(elementoA, elementoB) {
 }
 
 function colidiu(carroMario, corredores) {
-    let colidiu = false
+    let colidiu = false;
 
     corredores.jogadores.forEach(jogador => {
         if (!colidiu) {
-            colidiu = estaoSobrepostos(carroMario.elemento, jogador.elemento)
+            colidiu = estaoSobrepostos(carroMario.elemento, jogador.elemento);
+            if (colidiu) {
+                jogador.colidiu = true;
+            }
         }
-    })
-    return colidiu
+    });
+
+    return colidiu;
 }
 
 function Progresso() {
@@ -228,41 +234,63 @@ function Progresso() {
 }
 
 function Game() {
-    let pontos = 0
-    const areaDoJogo = document.querySelector('[game]')
-    const altura = areaDoJogo.clientHeight
-    const largura = areaDoJogo.clientWidth
+    let pontos = 0;
+    const areaDoJogo = document.querySelector('[game]');
+    const altura = areaDoJogo.clientHeight;
+    const largura = areaDoJogo.clientWidth;
 
-    const progresso = new Progresso()
-    const corredores = new Corredores(largura, altura, 300, () => progresso.atualizarPontos(++pontos))
+    const progresso = new Progresso();
+    const corredores = new Corredores(largura, altura, 300);
+    // const combustivelCogumelo = new combustivel(largura, altura, 300, () => progresso.atualizarPontos(++pontos));
 
     const arbustosEsquerda = new ArbustosEsquerda(largura, altura, 300)
     const arbustosDireita = new ArbustosDireita(largura, altura, 300)
 
-    const car = new Car(largura)
+    const car = new Car(largura);
 
-    const pista = new criaPista()
+    const pista = new criaPista();
 
-    areaDoJogo.appendChild(progresso.elemento)
-    areaDoJogo.appendChild(car.elemento)
-    areaDoJogo.appendChild(pista.elemento)
+    areaDoJogo.appendChild(progresso.elemento);
+    areaDoJogo.appendChild(car.elemento);
+    areaDoJogo.appendChild(pista.elemento);
+    // areaDoJogo.appendChild(combustivelCogumelo.cogumelo.elemento);
 
-    corredores.jogadores.forEach(jogador => areaDoJogo.appendChild(jogador.elemento))
+    corredores.jogadores.forEach(jogador => areaDoJogo.appendChild(jogador.elemento));
     arbustosEsquerda.arbustos.forEach(arbusto => areaDoJogo.appendChild(arbusto.elemento))
     arbustosDireita.arbustos.forEach(arbusto => areaDoJogo.appendChild(arbusto.elemento))
 
+    let colidiuCarroAnterior = false;
+
     this.start = () => {
         const temporizador = setInterval(() => {
-            corredores.animar()
-            car.animar()
+            const carrosInimigosSairam = corredores.animar();
+
+            // combustivelCogumelo.animar();
+            car.animar();
             arbustosEsquerda.animar()
             arbustosDireita.animar()
 
-            if(colidiu(car, corredores)){
-                progresso.atualizarPontos(--pontos)
+            const houveColisao = colidiu(car, corredores);
+
+            if (houveColisao && !colidiuCarroAnterior) {
+                colidiuCarroAnterior = true;
+                if (pontos > 0) {
+                    progresso.atualizarPontos(--pontos);
+                }
+            } else if (!houveColisao) {
+                colidiuCarroAnterior = false;
             }
-        }, 10)
-    }
+
+            if (carrosInimigosSairam > 0 && !houveColisao) {
+                pontos += carrosInimigosSairam;
+                progresso.atualizarPontos(pontos);
+            }
+
+            if (colidiuCombustivel(car, combustivelCogumelo)) {
+                console.log('nova vida');
+            }
+        }, 10);
+    };
 }
 
 new Game().start()
