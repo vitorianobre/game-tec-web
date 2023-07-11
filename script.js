@@ -233,15 +233,71 @@ function Progresso() {
     this.atualizarPontos(0)
 }
 
+function NovoCogumelo(largura, altura, popsicaoNaTela) {
+    this.elemento = novoElemento('img', 'combustivel')
+    this.elemento.src = '/personagens/Mushroom.png'
+
+    this.sortearPosicao = () => {
+        let posicaoXAleatoria = Math.floor(Math.random() * 350)
+        let posicaoYAleatoria = Math.floor(Math.random() * altura)
+        let margemX = ((largura / 2) - 190) // Margem horizontal para centralizar
+        let margemY = (altura - this.getAltura()) / 2 // Margem vertical para centralizar
+        this.setX(posicaoXAleatoria + margemX)
+        this.setY(posicaoYAleatoria + margemY)
+    }
+
+    this.getX = () => parseInt(this.elemento.style.left.split('px')[0])
+    this.setX = (posicaoNaTela) => this.elemento.style.left = `${posicaoNaTela}px`
+    this.getY = () => parseInt(this.elemento.style.bottom.split('px')[0])
+    this.setY = (posicaoNaTela) => this.elemento.style.bottom = `${posicaoNaTela}px`
+    this.getAltura = () => this.elemento.clientHeight
+
+    this.sortearPosicao()
+    this.setY(popsicaoNaTela)
+} 
+
+function combustivel(largura, altura, espaco) {
+    this.cogumelo = new NovoCogumelo(largura, altura, altura)
+
+    const deslocamento = 4
+    this.animar = () => {
+        this.cogumelo.setY(this.cogumelo.getY() - deslocamento)
+
+        if (this.cogumelo.getY() < - this.cogumelo.getAltura()) {
+            this.cogumelo.setY(this.cogumelo.getY() + espaco)
+            this.cogumelo.sortearPosicao()
+        }
+    }
+}
+
+function colidiuCombustivel(carroMario, combustivel) {
+    const colidiu = estaoSobrepostos(carroMario.elemento, combustivel.cogumelo.elemento);
+
+    return colidiu;
+}
+
+function MostraEnergia() {
+    this.elemento = novoElemento('span', 'energia')
+    this.atualizarEnergia = energia => {
+        this.elemento.innerHTML = ''
+        for (i=0; i<energia; i++) {
+            this.elemento.innerHTML += `<img src="personagens/Mushroom.png" class="vida" alt="">`
+        }
+    }
+}
+
 function Game() {
     let pontos = 0;
+    let energia = 16;
     const areaDoJogo = document.querySelector('[game]');
     const altura = areaDoJogo.clientHeight;
     const largura = areaDoJogo.clientWidth;
 
     const progresso = new Progresso();
+    const mostraEnergia = new MostraEnergia();
     const corredores = new Corredores(largura, altura, 300);
-    // const combustivelCogumelo = new combustivel(largura, altura, 300, () => progresso.atualizarPontos(++pontos));
+    const combustivelCogumelo = new combustivel(largura, altura, 300);
+    const combustivelCogumelo2 = new combustivel(largura, altura, 300);
 
     const arbustosEsquerda = new ArbustosEsquerda(largura, altura, 300)
     const arbustosDireita = new ArbustosDireita(largura, altura, 300)
@@ -251,9 +307,11 @@ function Game() {
     const pista = new criaPista();
 
     areaDoJogo.appendChild(progresso.elemento);
+    areaDoJogo.appendChild(mostraEnergia.elemento);
     areaDoJogo.appendChild(car.elemento);
     areaDoJogo.appendChild(pista.elemento);
-    // areaDoJogo.appendChild(combustivelCogumelo.cogumelo.elemento);
+    areaDoJogo.appendChild(combustivelCogumelo.cogumelo.elemento);
+    areaDoJogo.appendChild(combustivelCogumelo2.cogumelo.elemento);
 
     corredores.jogadores.forEach(jogador => areaDoJogo.appendChild(jogador.elemento));
     arbustosEsquerda.arbustos.forEach(arbusto => areaDoJogo.appendChild(arbusto.elemento))
@@ -265,7 +323,8 @@ function Game() {
         const temporizador = setInterval(() => {
             const carrosInimigosSairam = corredores.animar();
 
-            // combustivelCogumelo.animar();
+            combustivelCogumelo.animar();
+            combustivelCogumelo2.animar();
             car.animar();
             arbustosEsquerda.animar()
             arbustosDireita.animar()
@@ -286,10 +345,34 @@ function Game() {
                 progresso.atualizarPontos(pontos);
             }
 
-            if (colidiuCombustivel(car, combustivelCogumelo)) {
-                console.log('nova vida');
+            colidiuComCogumelo = colidiuCombustivel(car, combustivelCogumelo);
+            colidiuComCogumelo2 = colidiuCombustivel(car, combustivelCogumelo2);
+
+            if (colidiuComCogumelo) {
+                if (energia < 16) {
+                    ++energia
+                }
+                combustivelCogumelo.cogumelo.setY(-combustivelCogumelo.cogumelo.getAltura());
+                mostraEnergia.atualizarEnergia(energia)
             }
+
+            if (colidiuComCogumelo2) {
+                if (energia < 16) {
+                    ++energia
+                }
+                combustivelCogumelo2.cogumelo.setY(-combustivelCogumelo2.cogumelo.getAltura());
+                mostraEnergia.atualizarEnergia(energia)
+            }
+            mostraEnergia.atualizarEnergia(energia)
         }, 10);
+
+        const tiraEnergia = setInterval(() => {
+            energia = energia-1
+            mostraEnergia.atualizarEnergia(energia)
+            if (energia == 0) {
+                clearInterval(temporizador)
+            }
+        }, 1000)
     };
 }
 
